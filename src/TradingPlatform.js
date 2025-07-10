@@ -538,14 +538,19 @@ const ConnectionIndicator = ({ connectionStatus }) => {
 };
 
 // Mobile Account Card Component
-const AccountCard = ({ account, showPasswords, togglePasswordVisibility, handleEditAccount, handleDeleteAccount, currentUser, getAccountTypeColor, getStatusColor }) => (
+const AccountCard = ({ account, showPasswords, togglePasswordVisibility, handleEditAccount, handleDeleteAccount, currentUser, getAccountTypeColor, getPhaseColor, getStatusColor }) => (
   <div className="bg-white/5 rounded-lg p-4 border border-white/10">
     <div className="flex justify-between items-start mb-3">
       <div>
         <h3 className="text-white font-mono text-sm font-medium">{account.account_number}</h3>
-        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${getAccountTypeColor(account.account_type || 'Forex')}`}>
-          {account.account_type || 'Forex'}
-        </span>
+        <div className="flex flex-wrap gap-1 mt-1">
+          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getAccountTypeColor(account.account_type || 'Forex')}`}>
+            {account.account_type || 'Forex'}
+          </span>
+          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getPhaseColor(account.phase || 'challenge')}`}>
+            {account.phase || 'challenge'}
+          </span>
+        </div>
       </div>
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(account.status)}`}>
         {account.status}
@@ -756,7 +761,8 @@ const TradingPlatform = () => {
     account_number: '',
     password: '',
     server: '',
-    account_type: 'Forex'
+    account_type: 'Forex',
+    phase: 'challenge'
   });
   const [userFormData, setUserFormData] = useState({
     username: '',
@@ -1352,7 +1358,8 @@ const TradingPlatform = () => {
       account_number: account.account_number,
       password: account.password,
       server: account.server,
-      account_type: account.account_type || 'Forex'
+      account_type: account.account_type || 'Forex',
+      phase: account.phase || 'challenge'
     });
     setAccountErrors({});
     setShowAddForm(true);
@@ -1435,7 +1442,7 @@ const TradingPlatform = () => {
   };
 
   const resetAccountForm = () => {
-    setAccountFormData({ account_number: '', password: '', server: '', account_type: 'Forex' });
+    setAccountFormData({ account_number: '', password: '', server: '', account_type: 'Forex', phase: 'challenge' });
     setAccountErrors({});
     setShowAddForm(false);
     setEditingAccount(null);
@@ -1486,6 +1493,15 @@ const TradingPlatform = () => {
     switch (type) {
       case 'FTMO': return 'bg-orange-100 text-orange-800';
       case 'Forex': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPhaseColor = (phase) => {
+    switch (phase) {
+      case 'challenge': return 'bg-yellow-100 text-yellow-800';
+      case 'verification': return 'bg-blue-100 text-blue-800';
+      case 'account': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -1679,6 +1695,9 @@ const TradingPlatform = () => {
   const activeUsers = users.filter(user => user.status === 'active').length;
   const ftmoAccounts = accounts.filter(acc => acc.account_type === 'FTMO').length;
   const forexAccounts = accounts.filter(acc => acc.account_type === 'Forex').length;
+  const challengeAccounts = accounts.filter(acc => acc.phase === 'challenge').length;
+  const verificationAccounts = accounts.filter(acc => acc.phase === 'verification').length;
+  const liveAccounts = accounts.filter(acc => acc.phase === 'account').length;
 
   return (
     <>
@@ -1835,6 +1854,17 @@ const TradingPlatform = () => {
                     </span>
                     <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
                       Forex: {forexAccounts}
+                    </span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-1 sm:gap-3 mt-1">
+                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                      Challenge: {challengeAccounts}
+                    </span>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      Verification: {verificationAccounts}
+                    </span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                      Live: {liveAccounts}
                     </span>
                   </div>
                 </div>
@@ -2001,21 +2031,38 @@ const TradingPlatform = () => {
                     required
                   />
                   
-                  <div>
-                    <label className="block text-purple-200 text-sm font-medium mb-2">
-                      Account Type <span className="text-red-400">*</span>
-                    </label>
-                    <select
-                      value={accountFormData.account_type}
-                      onChange={(e) => handleAccountDataChange('account_type', e.target.value)}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
-                    >
-                      <option value="FTMO" className="bg-gray-800">FTMO Account</option>
-                      <option value="Nasdaq" className="bg-gray-800">Nasdaq Account</option>
-                      <option value="S&P500" className="bg-gray-800">S&P500 Account</option>
-                      <option value="Forex" className="bg-gray-800">Forex Account</option>
-                      <option value="Forex" className="bg-gray-800">XM Account</option>
-                    </select>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-purple-200 text-sm font-medium mb-2">
+                        Account Type <span className="text-red-400">*</span>
+                      </label>
+                      <select
+                        value={accountFormData.account_type}
+                        onChange={(e) => handleAccountDataChange('account_type', e.target.value)}
+                        className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
+                      >
+                        <option value="FTMO" className="bg-gray-800">FTMO Account</option>
+                        <option value="Nasdaq" className="bg-gray-800">Nasdaq Account</option>
+                        <option value="S&P500" className="bg-gray-800">S&P500 Account</option>
+                        <option value="Forex" className="bg-gray-800">Forex Account</option>
+                        <option value="XM" className="bg-gray-800">XM Account</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-purple-200 text-sm font-medium mb-2">
+                        Phase <span className="text-red-400">*</span>
+                      </label>
+                      <select
+                        value={accountFormData.phase}
+                        onChange={(e) => handleAccountDataChange('phase', e.target.value)}
+                        className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
+                      >
+                        <option value="challenge" className="bg-gray-800">Challenge</option>
+                        <option value="verification" className="bg-gray-800">Verification</option>
+                        <option value="account" className="bg-gray-800">Live Account</option>
+                      </select>
+                    </div>
                   </div>
                   
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
@@ -2156,6 +2203,7 @@ const TradingPlatform = () => {
                     <th className="px-6 py-4 text-left text-purple-200 font-medium">Account Number</th>
                     <th className="px-6 py-4 text-left text-purple-200 font-medium">Server</th>
                     <th className="px-6 py-4 text-left text-purple-200 font-medium">Type</th>
+                    <th className="px-6 py-4 text-left text-purple-200 font-medium">Phase</th>
                     <th className="px-6 py-4 text-left text-purple-200 font-medium">Password</th>
                     <th className="px-6 py-4 text-left text-purple-200 font-medium">Status</th>
                     <th className="px-6 py-4 text-left text-purple-200 font-medium">Balance</th>
@@ -2174,6 +2222,11 @@ const TradingPlatform = () => {
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getAccountTypeColor(account.account_type || 'Forex')}`}>
                           {account.account_type || 'Forex'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPhaseColor(account.phase || 'challenge')}`}>
+                          {account.phase || 'challenge'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -2233,6 +2286,7 @@ const TradingPlatform = () => {
                   handleDeleteAccount={handleDeleteAccount}
                   currentUser={currentUser}
                   getAccountTypeColor={getAccountTypeColor}
+                  getPhaseColor={getPhaseColor}
                   getStatusColor={getStatusColor}
                 />
               ))}
