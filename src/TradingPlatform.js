@@ -5,7 +5,7 @@ import { Plus, Edit, Trash2, Eye, EyeOff, DollarSign, TrendingUp, Users, Setting
  * API Client for MT5 Trading Platform
  * Handles all API calls to the backend server
  */
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://account-mananger-api.vercel.app/api';
 
 class ApiClient {
   constructor() {
