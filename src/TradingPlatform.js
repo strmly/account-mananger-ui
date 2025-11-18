@@ -2046,6 +2046,8 @@ const TradingPlatform = () => {
                         <option value="S&P500" className="bg-gray-800">S&P500 Account</option>
                         <option value="Forex" className="bg-gray-800">Forex Account</option>
                         <option value="XM" className="bg-gray-800">XM Account</option>
+                        <option value="XM-GOLD" className="bg-gray-800">XM GOLD Account</option>
+                        <option value="XM-NASDAQ" className="bg-gray-800">XM NASDAQ Account</option>
                       </select>
                     </div>
                     
