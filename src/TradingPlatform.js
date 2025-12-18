@@ -761,8 +761,9 @@ const TradingPlatform = () => {
     account_number: '',
     password: '',
     server: '',
-    account_type: 'Forex',
-    phase: 'challenge'
+    base_balance: 100000,
+    account_type: 'challenge',
+    provider: 'ftmo'
   });
   const [userFormData, setUserFormData] = useState({
     username: '',
@@ -939,6 +940,14 @@ const TradingPlatform = () => {
           errors.server = 'Server name must be 3-50 characters';
         }
         break;
+
+      case 'base_balance':
+        if (!value) {
+          errors.base_balance = 'Base balance is required';
+        } else if (isNaN(value) || Number(value) <= 0) {
+          errors.base_balance = 'Base balance must be a positive number';
+        }
+        break;
     }
 
     return errors;
@@ -1070,7 +1079,7 @@ const TradingPlatform = () => {
   const validateAccountForm = () => {
     const errors = {};
     
-    ['account_number', 'password', 'server'].forEach(field => {
+    ['account_number', 'password', 'server', 'base_balance'].forEach(field => {
       const fieldErrors = validateAccountField(field, accountFormData[field]);
       Object.assign(errors, fieldErrors);
     });
@@ -1290,11 +1299,18 @@ const TradingPlatform = () => {
     
     setIsSubmitting(true);
     try {
+      // Format the data to send to the server
+      const formattedData = {
+        account_number: parseInt(accountFormData.account_number),
+        password: accountFormData.password,
+        server: accountFormData.server,
+        base_balance: parseInt(accountFormData.base_balance),
+        account_type: accountFormData.account_type,
+        provider: accountFormData.provider
+      };
+
       if (editingAccount) {
-        const response = await apiClient.updateAccount(editingAccount.id, {
-          ...accountFormData,
-          updated_by: currentUser.username
-        });
+        const response = await apiClient.updateAccount(editingAccount.id, formattedData);
         
         const updatedAccount = response.account || response;
         const updatedAccounts = accounts.map(acc => 
@@ -1304,10 +1320,7 @@ const TradingPlatform = () => {
         setEditingAccount(null);
         showSuccess(`Account ${accountFormData.account_number} has been updated successfully.`, 'Account Updated');
       } else {
-        const response = await apiClient.createAccount({
-          ...accountFormData,
-          created_by: currentUser.username
-        });
+        const response = await apiClient.createAccount(formattedData);
         
         const newAccount = response.account || response;
         setAccounts([...accounts, newAccount]);
@@ -1358,8 +1371,9 @@ const TradingPlatform = () => {
       account_number: account.account_number,
       password: account.password,
       server: account.server,
-      account_type: account.account_type || 'Forex',
-      phase: account.phase || 'challenge'
+      base_balance: account.base_balance || 100000,
+      account_type: account.account_type || 'challenge',
+      provider: account.provider || 'ftmo'
     });
     setAccountErrors({});
     setShowAddForm(true);
@@ -1442,7 +1456,7 @@ const TradingPlatform = () => {
   };
 
   const resetAccountForm = () => {
-    setAccountFormData({ account_number: '', password: '', server: '', account_type: 'Forex', phase: 'challenge' });
+    setAccountFormData({ account_number: '', password: '', server: '', base_balance: 100000, account_type: 'challenge', provider: 'ftmo' });
     setAccountErrors({});
     setShowAddForm(false);
     setEditingAccount(null);
@@ -2027,7 +2041,17 @@ const TradingPlatform = () => {
                     value={accountFormData.server}
                     onChange={(e) => handleAccountDataChange('server', e.target.value)}
                     error={accountErrors.server}
-                    placeholder="e.g., XMGlobal-MT5 2"
+                    placeholder="e.g., FTMO-Server5"
+                    required
+                  />
+                  
+                  <ValidatedInput
+                    label="Base Balance"
+                    type="number"
+                    value={accountFormData.base_balance}
+                    onChange={(e) => handleAccountDataChange('base_balance', e.target.value)}
+                    error={accountErrors.base_balance}
+                    placeholder="e.g., 100000"
                     required
                   />
                   
@@ -2041,28 +2065,23 @@ const TradingPlatform = () => {
                         onChange={(e) => handleAccountDataChange('account_type', e.target.value)}
                         className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
                       >
-                        <option value="FTMO" className="bg-gray-800">FTMO Account</option>
-                        <option value="Nasdaq" className="bg-gray-800">Nasdaq Account</option>
-                        <option value="S&P500" className="bg-gray-800">S&P500 Account</option>
-                        <option value="Forex" className="bg-gray-800">Forex Account</option>
-                        <option value="XM" className="bg-gray-800">XM Account</option>
-                        <option value="XM-GOLD" className="bg-gray-800">XM GOLD Account</option>
-                        <option value="XM-NASDAQ" className="bg-gray-800">XM NASDAQ Account</option>
+                        <option value="challenge" className="bg-gray-800">Challenge</option>
+                        <option value="verification" className="bg-gray-800">Verification</option>
+                        <option value="live" className="bg-gray-800">Live</option>
                       </select>
                     </div>
                     
                     <div>
                       <label className="block text-purple-200 text-sm font-medium mb-2">
-                        Phase <span className="text-red-400">*</span>
+                        Provider <span className="text-red-400">*</span>
                       </label>
                       <select
-                        value={accountFormData.phase}
-                        onChange={(e) => handleAccountDataChange('phase', e.target.value)}
+                        value={accountFormData.provider}
+                        onChange={(e) => handleAccountDataChange('provider', e.target.value)}
                         className="w-full bg-white/10 border border-white/20 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
                       >
-                        <option value="challenge" className="bg-gray-800">Challenge</option>
-                        <option value="verification" className="bg-gray-800">Verification</option>
-                        <option value="account" className="bg-gray-800">Live Account</option>
+                        <option value="ftmo" className="bg-gray-800">FTMO</option>
+                        <option value="xm" className="bg-gray-800">XM</option>
                       </select>
                     </div>
                   </div>
