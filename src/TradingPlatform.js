@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Eye, EyeOff, DollarSign, TrendingUp, Users, Settings, LogOut, User, Shield, Key, Monitor, AlertCircle, CheckCircle, Wifi, WifiOff, X, AlertTriangle, Info, Menu } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, DollarSign, TrendingUp, Users, Settings, LogOut, User, Shield, Monitor, AlertCircle, CheckCircle, Wifi, WifiOff, X, AlertTriangle, Info, Menu } from 'lucide-react';
 
 /**
  * API Client for MT5 Trading Platform
@@ -711,7 +711,6 @@ const TradingPlatform = () => {
 
       const sessionData = SessionManager.getSession() || SessionManager.getFallbackSession();
       if (sessionData && sessionData.lastActivity) {
-        const timeSinceActivity = Date.now() - sessionData.lastActivity;
         const sevenHours = 7 * 60 * 60 * 1000; // 7 hours
         const sessionAge = Date.now() - sessionData.loginTime;
 
@@ -736,6 +735,7 @@ const TradingPlatform = () => {
       });
       clearInterval(sessionCheck);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, sessionId, sessionWarningShown]);
 
   // Notification system state
@@ -905,6 +905,9 @@ const TradingPlatform = () => {
           }
         }
         break;
+
+      default:
+        break;
     }
 
     return errors;
@@ -947,6 +950,9 @@ const TradingPlatform = () => {
         } else if (isNaN(value) || Number(value) <= 0) {
           errors.base_balance = 'Base balance must be a positive number';
         }
+        break;
+
+      default:
         break;
     }
 
@@ -1000,6 +1006,9 @@ const TradingPlatform = () => {
         } else if (value && value.length < 6) {
           errors.password = 'Password must be at least 6 characters';
         }
+        break;
+
+      default:
         break;
     }
 
@@ -1132,6 +1141,7 @@ const TradingPlatform = () => {
 
   useEffect(() => {
     initializeApp();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -1141,6 +1151,7 @@ const TradingPlatform = () => {
         loadUsers();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   useEffect(() => {
@@ -1164,7 +1175,7 @@ const TradingPlatform = () => {
           apiClient.setSessionId(savedSession.sessionId);
           
           // Verify the session is still valid
-          const response = await apiClient.verifySession();
+          await apiClient.verifySession();
           
           // If verification succeeds, restore the user session
           setCurrentUser(savedSession.user);
